@@ -1,8 +1,9 @@
 import 'reflect-metadata';
-import { useExpressServer } from 'routing-controllers';
+import { useExpressServer, useContainer } from 'routing-controllers';
 import { Application } from 'express';
 import * as express from 'express';
 import * as session from 'express-session';
+import { Container } from 'typedi';
 
 const app = express();
 
@@ -12,6 +13,7 @@ app.use(session({
     saveUninitialized: false,
 }));
 
+useContainer(Container);
 useExpressServer(app, {
     controllers: [ __dirname + '/controllers/*.js' ],
     useClassTransformer: true
