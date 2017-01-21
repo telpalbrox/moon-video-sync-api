@@ -1,19 +1,21 @@
-import { JsonController, Get, Req, Res, Session } from 'routing-controllers';
-import { Request, Response, Express } from 'express';
+import { JsonController, Get, Res, Session } from 'routing-controllers';
+import { Response, Express } from 'express';
 import { Inject } from 'typedi';
-import { CustomSession } from '../interfaces';
-import { UserRepository } from '../services/UserRepository';
+import { Connection } from 'typeorm';
+import { User } from '../entities/User';
 
 @JsonController()
 export class UserController {
     @Inject()
-    private userRepository: UserRepository
+    private connection: Connection
 
     @Get('/users')
-    getUsers(@Req() request: Request, @Res() response: Response, @Session() session: Express.Session) {
-        if (!session.user || !session.user.password || !session.user.user) {
-            return response.status(401).json({ code: 401 });
+    async getUsers(@Res() response: Response, @Session() session: Express.Session) {
+        if (!session.user) {
+            return response.status(401).json({
+                message: 'You are not logged'
+            });
         }
-        return this.userRepository.getAll();
+        return this.connection.getRepository(User).find();
     }
 }

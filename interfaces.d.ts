@@ -1,11 +1,4 @@
-export interface User {
-    user?: string;
-    password?: string;
-}
-
-export interface CustomSession {
-    user?: User;
-}
+import { User } from './entities/User';
 
 declare global {
     namespace Express {
