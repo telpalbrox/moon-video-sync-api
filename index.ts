@@ -7,6 +7,9 @@ import { Container } from 'typedi';
 import { createConnection, Connection } from 'typeorm';
 const SQLiteStore = require('connect-sqlite3')(session);
 
+import { User } from './entities/User';
+import { Room } from './entities/Room';
+
 const app = express();
 
 app.use(session({
@@ -29,10 +32,12 @@ createConnection({
     entities: [
         __dirname + '/entities/*.js'
     ]
-}).then((connection) => {
+}).then(async (connection) => {
     console.log('Connected to the database');
     Container.provide([
-        { type: Connection, value: connection }
+        { type: Connection, value: connection },
+        { name: 'UserRepository', value: connection.getRepository(User) },
+        { name: 'RoomRepository', value: connection.getRepository(Room) }
     ]);
     useExpressServer(app, {
         controllers: [ __dirname + '/controllers/*.js' ],

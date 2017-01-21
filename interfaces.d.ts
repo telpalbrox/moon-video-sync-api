@@ -3,7 +3,7 @@ import { User } from './entities/User';
 declare global {
     namespace Express {
         export interface Request {
-            test: string;
+            user?: User;
         }
 
         export interface Session {
