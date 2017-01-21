@@ -36,6 +36,7 @@ createConnection({
     ]);
     useExpressServer(app, {
         controllers: [ __dirname + '/controllers/*.js' ],
+        middlewares: [ __dirname + '/middlewares/*.js' ],
         useClassTransformer: true
     });
     app.listen(3000, () => console.log('Listening on 3000...'));

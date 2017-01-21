@@ -1,8 +1,10 @@
-import { JsonController, Body, Post, Res, Session } from 'routing-controllers';
+import { JsonController, Body, Post, Res, Session, UseBefore } from 'routing-controllers';
 import { Connection } from 'typeorm';
 import { Inject } from 'typedi';
 import { Response, Express } from 'express';
 import { User } from '../entities/User';
+import { IsLoggedMiddleware } from '../middlewares/IsLoggedMiddleware';
+import { IsNotLoggedMiddleware } from '../middlewares/IsNotLoggedMiddleware';
 
 @JsonController()
 export class AuthController {
@@ -10,14 +12,8 @@ export class AuthController {
     connection: Connection;
 
     @Post('/login')
+    @UseBefore(IsNotLoggedMiddleware)
     async login(@Body() user: User, @Session() session: Express.Session, @Res() response: Response) {
-        if (session.user) {
-            response.statusCode = 400;
-            return {
-                message: 'You are already logged'
-            };
-        }
-
         if (!user.email || !user.password) {
             return response.status(404).json({
                 message: 'Invalid info'
@@ -45,14 +41,8 @@ export class AuthController {
     }
 
     @Post('/register')
+    @UseBefore(IsNotLoggedMiddleware)
     async register(@Body() user: User, @Session() session: Express.Session, @Res() response: Response) {
-        if (session.user) {
-            response.statusCode = 400;
-            return {
-                message: 'You are already logged'
-            };
-        }
-
         if (!user.email || !user.firstName || !user.lastName || !user.password) {
             response.statusCode = 400;
             return {
@@ -71,14 +61,8 @@ export class AuthController {
     }
 
     @Post('/logout')
+    @UseBefore(IsLoggedMiddleware)
     logout(@Session() session: Express.Session, @Res() response: Response) {
-        if (!session.user) {
-            response.statusCode = 401;
-            return {
-                message: 'You are not logged'
-            };
-        }
-
         return new Promise((resolve, reject) => {
             session.destroy((err) => {
                 if (err) {
