@@ -12,9 +12,10 @@ export class UserController {
     @Get('/users')
     async getUsers(@Res() response: Response, @Session() session: Express.Session) {
         if (!session.user) {
-            return response.status(401).json({
+            response.statusCode = 401;
+            return {
                 message: 'You are not logged'
-            });
+            };
         }
         return this.connection.getRepository(User).find();
     }

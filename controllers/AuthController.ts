@@ -12,9 +12,10 @@ export class AuthController {
     @Post('/login')
     async login(@Body() user: User, @Session() session: Express.Session, @Res() response: Response) {
         if (session.user) {
-            return response.status(400).json({
+            response.statusCode = 400;
+            return {
                 message: 'You are already logged'
-            });
+            };
         }
 
         if (!user.email || !user.password) {
@@ -26,15 +27,17 @@ export class AuthController {
         const userRepository = this.connection.getRepository(User);
         const storedUser = await userRepository.findOne({ email: user.email });
         if (!storedUser) {
-            return response.status(404).json({
+            response.statusCode = 404;
+            return {
                 message: 'User not found'
-            });
+            };
         }
 
         if (user.password !== storedUser.password) {
-            return response.status(400).json({
+            response.statusCode = 400;
+            return {
                 message: 'Incorrect password'
-            });
+            };
         }
 
         session.user = storedUser;
@@ -44,22 +47,25 @@ export class AuthController {
     @Post('/register')
     async register(@Body() user: User, @Session() session: Express.Session, @Res() response: Response) {
         if (session.user) {
-            return response.status(400).json({
+            response.statusCode = 400;
+            return {
                 message: 'You are already logged'
-            });
+            };
         }
 
         if (!user.email || !user.firstName || !user.lastName || !user.password) {
-            return response.status(400).json({
+            response.statusCode = 400;
+            return {
                 message: 'Invalid info'
-            });
+            };
         }
         const userRepository = this.connection.getRepository(User);
         const sameEmailUser = await userRepository.findOne({ email: user.email });
         if (sameEmailUser) {
-            return response.status(409).json({
+            response.statusCode = 409;
+            return {
                 message: 'User already registered'
-            });
+            };
         }
         return await userRepository.persist(user);
     }
@@ -67,9 +73,10 @@ export class AuthController {
     @Post('/logout')
     logout(@Session() session: Express.Session, @Res() response: Response) {
         if (!session.user) {
-            return response.status(400).json({
+            response.statusCode = 401;
+            return {
                 message: 'You are not logged'
-            });
+            };
         }
 
         return new Promise((resolve, reject) => {
