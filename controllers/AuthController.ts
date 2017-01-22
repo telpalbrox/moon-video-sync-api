@@ -59,6 +59,8 @@ export class AuthController {
             };
         }
         await user.hashPassword();
+        const storedUser = await userRepository.persist(user);
+        session.user = storedUser;
         return await userRepository.persist(user);
     }
 
