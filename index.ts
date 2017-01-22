@@ -5,6 +5,7 @@ import * as express from 'express';
 import * as session from 'express-session';
 import { Container } from 'typedi';
 import { createConnection, Connection } from 'typeorm';
+import * as cors from 'cors';
 const SQLiteStore = require('connect-sqlite3')(session);
 
 import { User } from './entities/User';
@@ -12,6 +13,10 @@ import { Room } from './entities/Room';
 
 const app = express();
 
+app.use(cors({
+    credentials: true,
+    origin: ['http://localhost:4200']
+}));
 app.use(session({
     store: new SQLiteStore({
         db: 'db.sqlite'
@@ -19,6 +24,9 @@ app.use(session({
     secret: 'randomsecretcat',
     resave: true,
     saveUninitialized: false,
+    cookie: {
+        maxAge: 7 * 24 * 60 * 60 * 100 // one week
+    }
 }));
 
 useContainer(Container);
