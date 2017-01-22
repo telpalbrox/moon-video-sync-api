@@ -29,7 +29,8 @@ export class AuthController {
             };
         }
 
-        if (user.password !== storedUser.password) {
+        const correctPassword = await storedUser.comparePassword(user.password);
+        if (!correctPassword) {
             response.statusCode = 400;
             return {
                 message: 'Incorrect password'
@@ -57,6 +58,7 @@ export class AuthController {
                 message: 'User already registered'
             };
         }
+        await user.hashPassword();
         return await userRepository.persist(user);
     }
 

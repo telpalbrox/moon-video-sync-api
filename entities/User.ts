@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToMany } from 'typeorm';
 import { Exclude, Expose } from 'class-transformer';
+import * as bcrypt from 'bcrypt';
 import { Room } from './Room';
 
 @Entity()
@@ -25,5 +26,13 @@ export class User {
 
     get fullName() {
         return `${this.firstName} ${this.lastName}`;
+    }
+
+    async hashPassword() {
+        this.password = await bcrypt.hash(this.password, 10);
+    }
+
+    async comparePassword(password: string) {
+        return await bcrypt.compare(password, this.password);
     }
 }
