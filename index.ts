@@ -6,12 +6,16 @@ import * as session from 'express-session';
 import { Container } from 'typedi';
 import { createConnection, Connection } from 'typeorm';
 import * as cors from 'cors';
+import * as socketIO from 'socket.io';
+import { createServer } from 'http';
 const SQLiteStore = require('connect-sqlite3')(session);
 
 import { User } from './entities/User';
 import { Room } from './entities/Room';
+import { useIoServer } from './sockets';
 
 const app = express();
+const server = createServer(app);
 
 app.use(cors({
     credentials: true,
@@ -42,7 +46,9 @@ createConnection({
     ]
 }).then(async (connection) => {
     console.log('Connected to the database');
+    const io = socketIO(server);
     Container.provide([
+        { name: 'io', value: io },
         { type: Connection, value: connection },
         { name: 'UserRepository', value: connection.getRepository(User) },
         { name: 'RoomRepository', value: connection.getRepository(Room) }
@@ -52,7 +58,9 @@ createConnection({
         middlewares: [ __dirname + '/middlewares/*.js' ],
         useClassTransformer: true
     });
-    app.listen(3000, () => console.log('Listening on 3000...'));
+    require('./sockets/RoomSocketController');
+    useIoServer(io);
+    server.listen(3000, () => console.log('Listening on 3000...'));
 }).catch((error) => {
     console.error('Can\'t connect to the database');
     console.error(error);
