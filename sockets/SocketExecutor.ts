@@ -1,5 +1,5 @@
 import { Container } from 'typedi';
-import { socketMetadataStorage, findServerEventsWithTarget, SocketServerEnventMetadata } from './SocketMetadata';
+import { socketMetadataStorage, findServerEventsWithTarget, SocketServerEnventMetadata, findSocketEventsWithTarget } from './SocketMetadata';
 
 export class SocketExecutor {
     constructor(private io: SocketIO.Server) { }
@@ -13,5 +13,20 @@ export class SocketExecutor {
                 });
             });
         });
+        return this;
+    }
+
+    registerSocketEvents() {
+        socketMetadataStorage.controllers.forEach((controller: Function) => {
+            this.io.on('connection', (socket) => {
+                findSocketEventsWithTarget(controller).forEach((socketEventMetadata: SocketServerEnventMetadata) => {
+                    const instance = Container.get(controller as any);
+                    socket.on(socketEventMetadata.event, (...args) => {
+                        instance[socketEventMetadata.method](socket, ...args);
+                    });
+                });
+            });
+        });
+        return this;
     }
 }
