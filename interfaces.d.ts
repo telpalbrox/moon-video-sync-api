@@ -8,6 +8,7 @@ declare global {
 
         export interface Session {
             user?: User;
+            roomJoinedId?: number;
         }
     }
 
