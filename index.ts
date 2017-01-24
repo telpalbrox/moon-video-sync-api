@@ -17,11 +17,7 @@ import { useIoServer } from './sockets';
 const app = express();
 const server = createServer(app);
 
-app.use(cors({
-    credentials: true,
-    origin: ['http://localhost:4200']
-}));
-app.use(session({
+const sessionMiddleware = session({
     store: new SQLiteStore({
         db: 'db.sqlite'
     }),
@@ -31,7 +27,22 @@ app.use(session({
     cookie: {
         maxAge: 7 * 24 * 60 * 60 * 100 // one week
     }
+});
+
+app.use(cors({
+    credentials: true,
+    origin: ['http://localhost:4200']
 }));
+app.use(sessionMiddleware);
+
+require('./sockets/RoomSocketController');
+
+const io = socketIO(server);
+io.use((socket, next) => {
+    sessionMiddleware(socket.request, socket.request.res, next);
+});
+
+useIoServer(io);
 
 useContainer(Container);
 
@@ -46,7 +57,6 @@ createConnection({
     ]
 }).then(async (connection) => {
     console.log('Connected to the database');
-    const io = socketIO(server);
     Container.provide([
         { name: 'io', value: io },
         { type: Connection, value: connection },
@@ -58,8 +68,6 @@ createConnection({
         middlewares: [ __dirname + '/middlewares/*.js' ],
         useClassTransformer: true
     });
-    require('./sockets/RoomSocketController');
-    useIoServer(io);
     server.listen(3000, () => console.log('Listening on 3000...'));
 }).catch((error) => {
     console.error('Can\'t connect to the database');

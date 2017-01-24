@@ -10,4 +10,10 @@ declare global {
             user?: User;
         }
     }
+
+    interface CustomSocket extends SocketIO.Socket {
+        request: {
+            session: Express.Session
+        };
+    }
 }
