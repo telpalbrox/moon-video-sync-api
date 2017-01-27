@@ -1,3 +1,5 @@
+image: node:argon
+
 before_script:
     - apt-get -qq install -y python2.7 python2.7-dev build-essential make gcc g++ libicu-dev
     - apt-get -qq update
