@@ -1,6 +1,7 @@
+console.log('-----App started-----');
+
 import 'reflect-metadata';
 import { useExpressServer, useContainer } from 'routing-controllers';
-import { Application } from 'express';
 import * as express from 'express';
 import * as session from 'express-session';
 import { Container } from 'typedi';
