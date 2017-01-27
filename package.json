@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
-    "start:dev": "concurrently --kill-others \"tsc --watch\" \"nodemon --debug index.js\""
+    "start:dev": "concurrently --kill-others \"tsc --watch\" \"nodemon --debug index.js\"",
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",
