@@ -1,4 +1,4 @@
-import { JsonController, BodyParam, Res, Req, UseBefore, Post, Get, Param, Put } from 'routing-controllers';
+import { JsonController, BodyParam, Res, Req, UseBefore, Post, Get, Param, Put, Delete } from 'routing-controllers';
 import { Inject } from 'typedi';
 import { Repository } from 'typeorm';
 import { Request, Response } from 'express';
@@ -71,7 +71,21 @@ export class RoomController {
             room.currentVideoId = storedVideo.id;
         }
         await this.roomRepository.persist(room);
-        return room;
+        return storedVideo;
+    }
+
+    @Delete('/rooms/:roomId/videos/:videoId')
+    @UseBefore(IsLoggedMiddleware)
+    async deleteVideo(@Res() response: Response, @Param('roomId') roomId: string, @Param('videoId') videoId: string) {
+        if (!roomId || !videoId) {
+            response.statusCode = 400;
+            return {
+                message: 'Invalid info'
+            };
+        }
+        const room = await this.roomRepository.createQueryBuilder('room').where('room.id = :id', { id: roomId }).leftJoinAndSelect('room.users', 'users').leftJoinAndSelect('room.videos', 'videos').getOne();
+        room.videos = room.videos.filter((video) => video.id !== +videoId);
+        return await this.roomRepository.persist(room);
     }
 
     @Get('/rooms/:id/users')
