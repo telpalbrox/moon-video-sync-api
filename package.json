@@ -4,13 +4,14 @@
   "description": "",
   "main": "index.js",
   "engines": {
-    "node" : ">=6 <7"
+    "node": ">=6 <7"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js",
-    "start:dev": "concurrently --kill-others \"tsc --watch\" \"nodemon --debug index.js\"",
-    "build": "tsc"
+    "test": "tsc && mocha --recursive --require reflect-metadata test",
+    "start": "node ./src/index.js",
+    "start:dev": "concurrently --kill-others \"tsc --watch\" \"nodemon --debug ./src/index.js\"",
+    "build": "tsc",
+    "watch": "tsc --watch"
   },
   "keywords": [],
   "author": "",
@@ -34,12 +35,17 @@
   "devDependencies": {
     "@types/bcrypt": "^1.0.0",
     "@types/body-parser": "0.0.33",
+    "@types/chai": "^3.4.34",
     "@types/cors": "^2.8.0",
     "@types/express": "^4.0.35",
     "@types/express-session": "0.0.32",
+    "@types/mocha": "^2.2.38",
     "@types/node": "^7.0.0",
     "@types/socket.io": "^1.4.27",
+    "chai": "^3.5.0",
     "concurrently": "^3.1.0",
+    "mocha": "^3.2.0",
+    "node-mocks-http": "^1.5.6",
     "nodemon": "^1.11.0",
     "typescript": "^2.1.5"
   }

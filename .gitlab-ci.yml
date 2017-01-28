@@ -9,7 +9,6 @@ before_script:
 deploy:
     script:
       - npm run build
-      - git add --all -f
       - apt-get install -yqq ruby ruby-dev --silent
       - gem install dpl
       - dpl --provider=heroku --app=api-typescript-example --api-key=$HEROKU_API_KEY

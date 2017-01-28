@@ -1,5 +1,5 @@
 import { JsonController, Body, Post, Res, Session, UseBefore } from 'routing-controllers';
-import { Connection } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Inject } from 'typedi';
 import { Response, Express } from 'express';
 import { User } from '../entities/User';
@@ -8,20 +8,20 @@ import { IsNotLoggedMiddleware } from '../middlewares/IsNotLoggedMiddleware';
 
 @JsonController()
 export class AuthController {
-    @Inject()
-    connection: Connection;
+    @Inject('UserRepository')
+    userRepository: Repository<User>;
 
     @Post('/login')
     @UseBefore(IsNotLoggedMiddleware)
     async login(@Body() user: User, @Session() session: Express.Session, @Res() response: Response) {
         if (!user.email || !user.password) {
-            return response.status(404).json({
+            response.statusCode = 404;
+            return {
                 message: 'Invalid info'
-            });
+            };
         }
 
-        const userRepository = this.connection.getRepository(User);
-        const storedUser = await userRepository.findOne({ email: user.email });
+        const storedUser = await this.userRepository.findOne({ email: user.email });
         if (!storedUser) {
             response.statusCode = 404;
             return {
@@ -50,8 +50,8 @@ export class AuthController {
                 message: 'Invalid info'
             };
         }
-        const userRepository = this.connection.getRepository(User);
-        const sameEmailUser = await userRepository.findOne({ email: user.email });
+
+        const sameEmailUser = await this.userRepository.findOne({ email: user.email });
         if (sameEmailUser) {
             response.statusCode = 409;
             return {
@@ -59,14 +59,14 @@ export class AuthController {
             };
         }
         await user.hashPassword();
-        const storedUser = await userRepository.persist(user);
+        const storedUser = await this.userRepository.persist(user);
         session.user = storedUser;
-        return await userRepository.persist(user);
+        return await this.userRepository.persist(user);
     }
 
     @Post('/logout')
     @UseBefore(IsLoggedMiddleware)
-    logout(@Session() session: Express.Session, @Res() response: Response) {
+    logout(@Session() session: Express.Session) {
         return new Promise((resolve, reject) => {
             session.destroy((err) => {
                 if (err) {
