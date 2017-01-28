@@ -69,7 +69,7 @@ createConnection({
         middlewares: [ __dirname + '/middlewares/*.js' ],
         useClassTransformer: true
     });
-    server.listen(3000, () => console.log('Listening on 3000...'));
+    server.listen(process.env.PORT || 3000, () => console.log('Listening on 3000...'));
 }).catch((error) => {
     console.error('Can\'t connect to the database');
     console.error(error);
