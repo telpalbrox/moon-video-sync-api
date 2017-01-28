@@ -19,4 +19,7 @@ export class Room {
 
     @Column({ nullable: true })
     currentVideoId: number;
+
+    @Column()
+    playing: boolean;
 }

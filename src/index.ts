@@ -10,9 +10,9 @@ import { createServer } from 'http';
 const SQLiteStore = require('connect-sqlite3')(session);
 
 import { User } from './entities/User';
-import { Room } from './entities/Room';
 import { useIoServer } from './sockets';
 import {Video} from './entities/Video';
+import {roomRepositoryFactory} from './services/RoomRepository';
 
 const app = express();
 const server = createServer(app);
@@ -36,14 +36,10 @@ app.use(cors({
 }));
 app.use(sessionMiddleware);
 
-require('./sockets/RoomSocketController');
-
 const io = socketIO(server);
 io.use((socket, next) => {
     sessionMiddleware(socket.request, socket.request.res, next);
 });
-
-useIoServer(io);
 
 useContainer(Container);
 
@@ -67,7 +63,7 @@ export async function startUpAPI() {
         { name: 'io', value: io },
         { type: Connection, value: connection },
         { name: 'UserRepository', value: connection.getRepository(User) },
-        { name: 'RoomRepository', value: connection.getRepository(Room) },
+        { name: 'RoomRepository', value: roomRepositoryFactory(connection) },
         { name: 'VideoRepository', value: connection.getRepository(Video) }
     ]);
     useExpressServer(app, {
@@ -75,6 +71,8 @@ export async function startUpAPI() {
         middlewares: [ __dirname + '/middlewares/*.js' ],
         useClassTransformer: true
     });
+    require('./sockets/RoomSocketController');
+    useIoServer(io);
     await startExpressServer();
     return app;
 }

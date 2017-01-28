@@ -1,6 +1,5 @@
 import {
-    JsonController, BodyParam, Res, Req, UseBefore, Post, Get, Param, Put, Delete,
-    Session
+    JsonController, BodyParam, Res, Req, UseBefore, Post, Get, Param, Put, Delete
 } from 'routing-controllers';
 import { Inject } from 'typedi';
 import { Repository } from 'typeorm';
@@ -31,7 +30,7 @@ export class RoomController {
         const room = new Room();
         room.name = name;
         room.users.push(request.user);
-
+        room.playing = false;
         return await this.roomRepository.persist(room);
     }
 
@@ -101,7 +100,11 @@ export class RoomController {
         }
 
         room.videos = room.videos.filter((video) => video.id !== +videoId);
+        if (!room.videos.length) {
+            room.currentVideoId = null;
+        }
         await this.roomRepository.persist(room);
+        await this.videoRepository.remove(video);
         this.io.to(`room n${room.id}`).emit('video deleted', video);
         return room;
     }
