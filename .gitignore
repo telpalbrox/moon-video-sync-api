@@ -1,4 +1,6 @@
 node_modules/
 **.js
-db.sqlite.db
+**.db
 .idea/
+.dpl/
+npm-debug.log

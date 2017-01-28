@@ -1,5 +1,3 @@
-console.log('-----App started-----');
-
 import 'reflect-metadata';
 import { useExpressServer, useContainer } from 'routing-controllers';
 import * as express from 'express';
@@ -17,10 +15,11 @@ import { useIoServer } from './sockets';
 
 const app = express();
 const server = createServer(app);
+const databaseFileName = process.env.NODE_ENV === 'TEST' ? 'db.test.sqlite' : 'db.sqlite';
 
 const sessionMiddleware = session({
     store: new SQLiteStore({
-        db: 'db.sqlite'
+        db: databaseFileName
     }),
     secret: 'randomsecretcat',
     resave: true,
@@ -47,16 +46,21 @@ useIoServer(io);
 
 useContainer(Container);
 
-createConnection({
-    driver: {
-        type: 'sqlite',
-        storage: 'db.sqlite.db'
-    },
-    autoSchemaSync: true,
-    entities: [
-        __dirname + '/entities/*.js'
-    ]
-}).then(async (connection) => {
+if (process.env.NODE_ENV !== 'TEST') {
+    startUpAPI().then(() => console.log(`Server listening on: ${process.env.PORT || 3000}`));
+}
+
+export async function startUpAPI() {
+    const connection = await createConnection({
+        driver: {
+            type: 'sqlite',
+            storage: `${databaseFileName}.db`
+        },
+        autoSchemaSync: true,
+        entities: [
+            __dirname + '/entities/*.js'
+        ]
+    });
     console.log('Connected to the database');
     Container.provide([
         { name: 'io', value: io },
@@ -69,8 +73,12 @@ createConnection({
         middlewares: [ __dirname + '/middlewares/*.js' ],
         useClassTransformer: true
     });
-    server.listen(process.env.PORT || 3000, () => console.log('Listening on 3000...'));
-}).catch((error) => {
-    console.error('Can\'t connect to the database');
-    console.error(error);
-});
+    await startExpressServer();
+    return app;
+}
+
+function startExpressServer() {
+    return new Promise((resolve) => {
+        server.listen(process.env.PORT || 3000, () => resolve());
+    });
+}
