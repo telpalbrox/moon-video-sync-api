@@ -1,4 +1,4 @@
-import { Middleware, MiddlewareInterface } from 'routing-controllers';
+import { Middleware } from 'routing-controllers';
 import { Request, Response } from 'express';
 
 @Middleware()

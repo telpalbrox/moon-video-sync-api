@@ -1,5 +1,4 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable } from 'typeorm';
-import { Exclude } from 'class-transformer';
 import { User } from './User';
 
 @Entity()

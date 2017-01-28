@@ -3,7 +3,6 @@ import { Inject } from 'typedi';
 import { Repository } from 'typeorm';
 import { Request, Response } from 'express';
 import { IsLoggedMiddleware } from '../middlewares/IsLoggedMiddleware';
-import { User } from '../entities/User';
 import { Room } from '../entities/Room';
 
 @JsonController()

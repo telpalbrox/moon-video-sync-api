@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToMany } from 'typeorm';
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude } from 'class-transformer';
 import * as bcrypt from 'bcrypt';
 import { Room } from './Room';
 

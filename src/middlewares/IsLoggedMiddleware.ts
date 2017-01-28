@@ -1,4 +1,4 @@
-import { Middleware, MiddlewareInterface } from 'routing-controllers';
+import { Middleware } from 'routing-controllers';
 import { Repository } from 'typeorm';
 import { Inject } from 'typedi';
 import { Request, Response } from 'express';

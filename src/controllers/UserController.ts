@@ -9,7 +9,7 @@ import { IsLoggedMiddleware } from '../middlewares/IsLoggedMiddleware';
 @UseBefore(IsLoggedMiddleware)
 export class UserController {
     @Inject()
-    private connection: Connection
+    private connection: Connection;
 
     @Get('/users')
     async getUsers(@Res() response: Response, @Session() session: Express.Session) {
