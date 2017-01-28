@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, OneToMany } from 'typeorm';
 import { User } from './User';
+import { Video } from './Video';
 
 @Entity()
 export class Room {
@@ -12,4 +13,10 @@ export class Room {
     @ManyToMany((type) => User, (user) => user.rooms)
     @JoinTable()
     users: User[] = [];
+
+    @OneToMany((type) => Video, (video) => video.room)
+    videos: Video[] = [];
+
+    @Column({ nullable: true })
+    currentVideoId: number;
 }

@@ -4,11 +4,15 @@ import { Repository } from 'typeorm';
 import { Request, Response } from 'express';
 import { IsLoggedMiddleware } from '../middlewares/IsLoggedMiddleware';
 import { Room } from '../entities/Room';
+import {Video} from '../entities/Video';
 
 @JsonController()
 export class RoomController {
     @Inject('RoomRepository')
     roomRepository: Repository<Room>;
+
+    @Inject('VideoRepository')
+    videoRepository: Repository<Video>;
 
     @Post('/rooms')
     @UseBefore(IsLoggedMiddleware)
@@ -34,11 +38,39 @@ export class RoomController {
     @Get('/rooms/:id')
     @UseBefore(IsLoggedMiddleware)
     async getRoom(@Res() response: Response, @Param('id') id: string) {
-        const room = await this.roomRepository.createQueryBuilder('room').where('room.id = :id', { id }).innerJoinAndSelect('room.users', 'users').getOne();
+        const room = await this.roomRepository.createQueryBuilder('room').where('room.id = :id', { id }).leftJoinAndSelect('room.users', 'users').leftJoinAndSelect('room.videos', 'videos').getOne();
         if (!room) {
             response.statusCode = 404;
             return { message: 'Room not found' };
         }
+        return room;
+    }
+
+    @Post('/rooms/:id/videos')
+    @UseBefore(IsLoggedMiddleware)
+    async addVideo(@Res() response: Response, @Param('id') id: string, @BodyParam('youtubeId') youtubeId: string) {
+        if (!youtubeId) {
+            response.statusCode = 400;
+            return {
+                message: 'Invalid info'
+            };
+        }
+
+        const room = await this.roomRepository.createQueryBuilder('room').where('room.id = :id', { id }).leftJoinAndSelect('room.users', 'users').leftJoinAndSelect('room.videos', 'videos').getOne();
+        const alreadyAdded = !!room.videos.find((video) => youtubeId === video.youtubeId);
+        if (alreadyAdded) {
+            response.statusCode = 409;
+            return { message: 'This video is already added' };
+        }
+        const video = new Video();
+        video.youtubeId = youtubeId;
+        video.title = 'not defined yet';
+        const storedVideo = await this.videoRepository.persist(video);
+        room.videos.push(storedVideo);
+        if (!room.currentVideoId) {
+            room.currentVideoId = storedVideo.id;
+        }
+        await this.roomRepository.persist(room);
         return room;
     }
 

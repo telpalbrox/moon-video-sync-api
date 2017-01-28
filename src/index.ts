@@ -12,6 +12,7 @@ const SQLiteStore = require('connect-sqlite3')(session);
 import { User } from './entities/User';
 import { Room } from './entities/Room';
 import { useIoServer } from './sockets';
+import {Video} from './entities/Video';
 
 const app = express();
 const server = createServer(app);
@@ -66,7 +67,8 @@ export async function startUpAPI() {
         { name: 'io', value: io },
         { type: Connection, value: connection },
         { name: 'UserRepository', value: connection.getRepository(User) },
-        { name: 'RoomRepository', value: connection.getRepository(Room) }
+        { name: 'RoomRepository', value: connection.getRepository(Room) },
+        { name: 'VideoRepository', value: connection.getRepository(Video) }
     ]);
     useExpressServer(app, {
         controllers: [ __dirname + '/controllers/*.js' ],
