@@ -31,6 +31,17 @@ export class RoomController {
         return await this.roomRepository.find();
     }
 
+    @Get('/rooms/:id')
+    @UseBefore(IsLoggedMiddleware)
+    async getRoom(@Res() response: Response, @Param('id') id: string) {
+        const room = await this.roomRepository.createQueryBuilder('room').where('room.id = :id', { id }).innerJoinAndSelect('room.users', 'users').getOne();
+        if (!room) {
+            response.statusCode = 404;
+            return { message: 'Room not found' };
+        }
+        return room;
+    }
+
     @Get('/rooms/:id/users')
     @UseBefore(IsLoggedMiddleware)
     async getRoomUsers(@Res() response: Response, @Param('id') id: string) {
