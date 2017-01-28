@@ -1,4 +1,7 @@
-import { JsonController, BodyParam, Res, Req, UseBefore, Post, Get, Param, Put, Delete } from 'routing-controllers';
+import {
+    JsonController, BodyParam, Res, Req, UseBefore, Post, Get, Param, Put, Delete,
+    Session
+} from 'routing-controllers';
 import { Inject } from 'typedi';
 import { Repository } from 'typeorm';
 import { Request, Response } from 'express';
@@ -13,6 +16,9 @@ export class RoomController {
 
     @Inject('VideoRepository')
     videoRepository: Repository<Video>;
+
+    @Inject('io')
+    io: SocketIO.Server;
 
     @Post('/rooms')
     @UseBefore(IsLoggedMiddleware)
@@ -71,6 +77,7 @@ export class RoomController {
             room.currentVideoId = storedVideo.id;
         }
         await this.roomRepository.persist(room);
+        this.io.to(`room n${room.id}`).emit('video added', storedVideo);
         return storedVideo;
     }
 
@@ -84,8 +91,19 @@ export class RoomController {
             };
         }
         const room = await this.roomRepository.createQueryBuilder('room').where('room.id = :id', { id: roomId }).leftJoinAndSelect('room.users', 'users').leftJoinAndSelect('room.videos', 'videos').getOne();
+        const video = await this.videoRepository.findOneById(videoId);
+
+        if (!room || !video) {
+            response.statusCode = 404;
+            return {
+                message: 'Resource not found'
+            };
+        }
+
         room.videos = room.videos.filter((video) => video.id !== +videoId);
-        return await this.roomRepository.persist(room);
+        await this.roomRepository.persist(room);
+        this.io.to(`room n${room.id}`).emit('video deleted', video);
+        return room;
     }
 
     @Get('/rooms/:id/users')
