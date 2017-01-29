@@ -51,6 +51,19 @@ export class RoomController {
         return room;
     }
 
+    @Delete('/rooms/:id')
+    @UseBefore(IsLoggedMiddleware)
+    async deleteRoom(@Res() response: Response, @Param('id') id: string) {
+        const room = await this.roomRepository.findOneById(id);
+        if (!room) {
+            response.statusCode = 404;
+            return { message: 'Room not found' };
+        }
+        await this.videoRepository.remove(room.videos);
+        await this.roomRepository.remove(room);
+        return { message: 'ok' };
+    }
+
     @Post('/rooms/:id/videos')
     @UseBefore(IsLoggedMiddleware)
     async addVideo(@Res() response: Response, @Param('id') id: string, @BodyParam('youtubeId') youtubeId: string) {
