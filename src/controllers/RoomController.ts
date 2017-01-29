@@ -70,6 +70,9 @@ export class RoomController {
         const video = new Video();
         video.youtubeId = youtubeId;
         video.title = 'not defined yet';
+        if (!room.videos.length) {
+            video.startedPlayed = new Date().toISOString();
+        }
         const storedVideo = await this.videoRepository.persist(video);
         room.videos.push(storedVideo);
         if (!room.currentVideoId) {
