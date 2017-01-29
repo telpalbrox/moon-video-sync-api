@@ -46,6 +46,7 @@ export class RoomSocketController {
                 if (err) {
                     throw err;
                 }
+                socket.request.session.roomJoinedId = joinOptions.id;
             });
         });
     }
