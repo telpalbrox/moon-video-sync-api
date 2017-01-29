@@ -7,8 +7,7 @@ import { createConnection, Connection } from 'typeorm';
 import * as cors from 'cors';
 import * as socketIO from 'socket.io';
 import { createServer } from 'http';
-const SQLiteStore = require('connect-sqlite3')(session);
-
+import * as parseDbUrl from 'parse-database-url';
 import { User } from './entities/User';
 import { useIoServer } from './sockets';
 import {Video} from './entities/Video';
@@ -16,12 +15,53 @@ import {roomRepositoryFactory} from './services/RoomRepository';
 
 const app = express();
 const server = createServer(app);
-const databaseFileName = process.env.NODE_ENV === 'TEST' ? 'db.test.sqlite' : 'db.sqlite';
+
+let sessionStore;
+let typeORMConfig;
+
+if (process.env.NODE_ENV === 'production') {
+    if (!process.env.DATABASE_URL || process.env.REDIS_URL) {
+        throw new Error('Please configure DATABASE_URL and REDIS_URL environment variables');
+    }
+    const dbConfig = parseDbUrl(process.env.DATABASE_URL);
+    const RedisStore = require('connect-redis')(session);
+    sessionStore = new RedisStore({
+        url: process.env.REDIS_URL
+    });
+    typeORMConfig = {
+        driver: {
+            type: dbConfig.driver,
+            host: dbConfig.host,
+            port: dbConfig.port,
+            username: dbConfig.user,
+            password: dbConfig.password,
+            database: dbConfig.database
+        },
+        autoSchemaSync: true,
+        entities: [
+            __dirname + '/entities/*.js'
+        ]
+    };
+} else {
+    const SQLiteStore = require('connect-sqlite3')(session);
+    const databaseFileName = process.env.NODE_ENV === 'TEST' ? 'db.test.sqlite' : 'db.sqlite';
+    sessionStore = new SQLiteStore({
+        db: databaseFileName
+    });
+    typeORMConfig = {
+        driver: {
+            type: 'sqlite',
+            storage: `${databaseFileName}.db`
+        },
+        autoSchemaSync: true,
+        entities: [
+            __dirname + '/entities/*.js'
+        ]
+    };
+}
 
 const sessionMiddleware = session({
-    store: new SQLiteStore({
-        db: databaseFileName
-    }),
+    store: sessionStore,
     secret: process.env.COOKIE_SECRET || 'randomsecretcat',
     resave: true,
     saveUninitialized: false,
@@ -50,16 +90,7 @@ if (process.env.NODE_ENV !== 'TEST') {
 }
 
 export async function startUpAPI() {
-    const connection = await createConnection({
-        driver: {
-            type: 'sqlite',
-            storage: `${databaseFileName}.db`
-        },
-        autoSchemaSync: true,
-        entities: [
-            __dirname + '/entities/*.js'
-        ]
-    });
+    const connection = await createConnection(typeORMConfig);
     console.log('Connected to the database');
     Container.provide([
         { name: 'io', value: io },
