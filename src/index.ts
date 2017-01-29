@@ -22,7 +22,7 @@ const sessionMiddleware = session({
     store: new SQLiteStore({
         db: databaseFileName
     }),
-    secret: 'randomsecretcat',
+    secret: process.env.COOKIE_SECRET || 'randomsecretcat',
     resave: true,
     saveUninitialized: false,
     cookie: {
@@ -30,9 +30,11 @@ const sessionMiddleware = session({
     }
 });
 
+const origin = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:4200'];
+
 app.use(cors({
     credentials: true,
-    origin: ['http://localhost:4200']
+    origin
 }));
 app.use(sessionMiddleware);
 
