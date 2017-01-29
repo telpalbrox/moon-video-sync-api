@@ -20,7 +20,7 @@ let sessionStore;
 let typeORMConfig;
 
 if (process.env.NODE_ENV === 'production') {
-    if (!process.env.DATABASE_URL || process.env.REDIS_URL) {
+    if (!process.env.DATABASE_URL || !process.env.REDIS_URL) {
         throw new Error('Please configure DATABASE_URL and REDIS_URL environment variables');
     }
     const dbConfig = parseDbUrl(process.env.DATABASE_URL);
