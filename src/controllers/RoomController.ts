@@ -43,7 +43,7 @@ export class RoomController {
     @Get('/rooms/:id')
     @UseBefore(IsLoggedMiddleware)
     async getRoom(@Res() response: Response, @Param('id') id: string) {
-        const room = await this.roomRepository.createQueryBuilder('room').where('room.id = :id', { id }).leftJoinAndSelect('room.users', 'users').leftJoinAndSelect('room.videos', 'videos').getOne();
+        const room = await this.roomRepository.findOneById(id);
         if (!room) {
             response.statusCode = 404;
             return { message: 'Room not found' };
@@ -61,7 +61,7 @@ export class RoomController {
             };
         }
 
-        const room = await this.roomRepository.createQueryBuilder('room').where('room.id = :id', { id }).leftJoinAndSelect('room.users', 'users').leftJoinAndSelect('room.videos', 'videos').getOne();
+        const room = await this.roomRepository.findOneById(id);
         const alreadyAdded = !!room.videos.find((video) => youtubeId === video.youtubeId);
         if (alreadyAdded) {
             response.statusCode = 409;
@@ -103,9 +103,9 @@ export class RoomController {
         if (!room.videos.length) {
             room.currentVideoId = null;
         }
+        this.io.to(`room n${room.id}`).emit('video deleted', video);
         await this.roomRepository.persist(room);
         await this.videoRepository.remove(video);
-        this.io.to(`room n${room.id}`).emit('video deleted', video);
         return room;
     }
 
