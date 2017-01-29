@@ -17,4 +17,7 @@ export class Video {
 
     @Column({ nullable: true })
     currentPosition: number;
+
+    @Column({ nullable: true })
+    startedPlayed: string;
 }

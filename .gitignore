@@ -1,6 +1,7 @@
 node_modules/
 **.js
 **.db
+**.db-journal
 .idea/
 .dpl/
 npm-debug.log
