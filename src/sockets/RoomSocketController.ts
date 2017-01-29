@@ -38,6 +38,9 @@ export class RoomSocketController {
                 room.playing = false;
                 await this.roomRepository.persist(room);
                 const video = await this.videoRepository.findOneById(room.currentVideoId);
+                if (!video) {
+                    return;
+                }
                 video.startedPlayed = null;
                 await this.videoRepository.persist(video);
             }
@@ -57,8 +60,10 @@ export class RoomSocketController {
                 room.playing = true;
                 await this.roomRepository.persist(room);
                 const video = await this.videoRepository.findOneById(room.currentVideoId);
-                video.startedPlayed = new Date().toISOString();
-                await this.videoRepository.persist(video);
+                if (video) {
+                    video.startedPlayed = new Date().toISOString();
+                    await this.videoRepository.persist(video);
+                }
             }
             socket.join(`room n${joinOptions.id}`, (err) => {
                 if (err) {
@@ -76,6 +81,9 @@ export class RoomSocketController {
         }
         const room = await this.roomRepository.findOneById(socket.request.session.roomJoinedId);
         const video = await this.videoRepository.findOneById(data.id);
+        if (!video) {
+            return;
+        }
         if (room.currentVideoId === video.id) {
             return;
         }
