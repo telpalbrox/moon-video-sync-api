@@ -26,9 +26,12 @@ export class RoomSocketController {
 
     @SocketEvent('disconnect')
     disconnectedSocket(socket: CustomSocket) {
+        console.log(`disconnected: ${socket.id}`);
+
         if (!socket.request.session.roomJoinedId) {
-            console.error('Not specified room id in session!');
+            return console.error('Not specified room id in session!');
         }
+
         this.io.in(`room n${socket.request.session.roomJoinedId}`).clients(async (err, clients) => {
             if (!clients.length) {
                 const room = await this.roomRepository.findOneById(socket.request.session.roomJoinedId);
@@ -40,7 +43,6 @@ export class RoomSocketController {
             }
             delete socket.request.session.roomJoinedId;
         });
-        console.log(`disconnected: ${socket.id}`);
     }
 
     @SocketEvent('join room')
@@ -48,7 +50,7 @@ export class RoomSocketController {
         // TODO check if the user has joined this room before
         this.io.in(`room n${joinOptions.id}`).clients(async (err, clients) => {
             if (!joinOptions.id) {
-                throw new Error('Not specified room id!')
+                throw new Error('Not specified room id!');
             }
             if (!clients.length) {
                 const room = await this.roomRepository.findOneById(joinOptions.id);
@@ -65,6 +67,25 @@ export class RoomSocketController {
                 socket.request.session.roomJoinedId = joinOptions.id;
             });
         });
+    }
+
+    @SocketEvent('change video')
+    async nextVideo(socket: CustomSocket, data: { id: number, emit: boolean }) {
+        if (!socket.request.session.roomJoinedId) {
+            throw new Error('Not specified room id in session!');
+        }
+        const room = await this.roomRepository.findOneById(socket.request.session.roomJoinedId);
+        const video = await this.videoRepository.findOneById(data.id);
+        if (room.currentVideoId === video.id) {
+            return;
+        }
+        room.currentVideoId = video.id;
+        video.startedPlayed = new Date().toISOString();
+        await this.roomRepository.persist(room);
+        await this.videoRepository.persist(video);
+        if (data.emit) {
+            this.io.to(`room n${socket.request.session.roomJoinedId}`).emit('video changed', video);
+        }
     }
 
     @SocketEvent('pause song')
