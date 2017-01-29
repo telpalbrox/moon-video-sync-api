@@ -7,6 +7,7 @@ import { Request, Response } from 'express';
 import { IsLoggedMiddleware } from '../middlewares/IsLoggedMiddleware';
 import { Room } from '../entities/Room';
 import {Video} from '../entities/Video';
+import {YoutubeService} from '../services/YoutubeService';
 
 @JsonController()
 export class RoomController {
@@ -18,6 +19,9 @@ export class RoomController {
 
     @Inject('io')
     io: SocketIO.Server;
+
+    @Inject()
+    youtubeService: YoutubeService;
 
     @Post('/rooms')
     @UseBefore(IsLoggedMiddleware)
@@ -74,6 +78,13 @@ export class RoomController {
             };
         }
 
+        const title = await this.youtubeService.getVideoTitle(youtubeId);
+
+        if (!title) {
+            response.statusCode = 400;
+            return { message: 'Invalid youtube id' };
+        }
+
         const room = await this.roomRepository.findOneById(id);
         const alreadyAdded = !!room.videos.find((video) => youtubeId === video.youtubeId);
         if (alreadyAdded) {
@@ -82,7 +93,7 @@ export class RoomController {
         }
         const video = new Video();
         video.youtubeId = youtubeId;
-        video.title = 'not defined yet';
+        video.title = title;
         if (!room.videos.length) {
             video.startedPlayed = new Date().toISOString();
         }

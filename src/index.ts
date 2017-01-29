@@ -12,6 +12,7 @@ import { User } from './entities/User';
 import { useIoServer } from './sockets';
 import {Video} from './entities/Video';
 import {roomRepositoryFactory} from './services/RoomRepository';
+import {YoutubeService} from './services/YoutubeService';
 
 const app = express();
 const server = createServer(app);
@@ -97,7 +98,8 @@ export async function startUpAPI() {
         { type: Connection, value: connection },
         { name: 'UserRepository', value: connection.getRepository(User) },
         { name: 'RoomRepository', value: roomRepositoryFactory(connection) },
-        { name: 'VideoRepository', value: connection.getRepository(Video) }
+        { name: 'VideoRepository', value: connection.getRepository(Video) },
+        { type: YoutubeService, value: new YoutubeService() }
     ]);
     useExpressServer(app, {
         controllers: [ __dirname + '/controllers/*.js' ],
