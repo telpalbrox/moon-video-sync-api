@@ -33,7 +33,6 @@ export class RoomController {
 
         const room = new Room();
         room.name = name;
-        room.users.push(request.user);
         room.playing = false;
         return await this.roomRepository.persist(room);
     }

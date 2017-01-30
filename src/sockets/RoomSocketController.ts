@@ -3,6 +3,7 @@ import { SocketController, ServerEvent, SocketEvent } from './decorators';
 import {Repository} from 'typeorm';
 import {Room} from '../entities/Room';
 import {Video} from '../entities/Video';
+import {User} from '../entities/User';
 
 interface JoinRoomParams {
     id?: number;
@@ -15,6 +16,9 @@ export class RoomSocketController {
 
     @Inject('VideoRepository')
     videoRepository: Repository<Video>;
+
+    @Inject('UserRepository')
+    userRepository: Repository<User>;
 
     @Inject('io')
     io: SocketIO.Server;
@@ -33,8 +37,14 @@ export class RoomSocketController {
         }
 
         this.io.in(`room n${socket.request.session.roomJoinedId}`).clients(async (err, clients) => {
+            const room = await this.roomRepository.findOneById(socket.request.session.roomJoinedId);
+            const userLeaving = await this.userRepository.findOneById(socket.request.session.user.id);
+            room.users = room.users.filter((user) => user.id !== userLeaving.id);
+            await this.roomRepository.persist(room);
+            delete userLeaving.password;
+            delete userLeaving.email;
+            this.io.to(`room n${socket.request.session.roomJoinedId}`).emit('user leave', userLeaving);
             if (!clients.length) {
-                const room = await this.roomRepository.findOneById(socket.request.session.roomJoinedId);
                 room.playing = false;
                 await this.roomRepository.persist(room);
                 const video = await this.videoRepository.findOneById(room.currentVideoId);
@@ -50,7 +60,9 @@ export class RoomSocketController {
 
     @SocketEvent('join room')
     joinRoom(socket: CustomSocket, joinOptions: JoinRoomParams) {
-        // TODO check if the user has joined this room before
+        if (!socket.request.session.user) {
+            throw new Error('You should be logged before join a room');
+        }
         this.io.in(`room n${joinOptions.id}`).clients(async (err, clients) => {
             if (!joinOptions.id) {
                 throw new Error('Not specified room id!');
@@ -65,11 +77,18 @@ export class RoomSocketController {
                     await this.videoRepository.persist(video);
                 }
             }
-            socket.join(`room n${joinOptions.id}`, (err) => {
+            socket.join(`room n${joinOptions.id}`, async (err) => {
                 if (err) {
                     throw err;
                 }
+                const room = await this.roomRepository.findOneById(joinOptions.id);
+                const user = await this.userRepository.findOneById(socket.request.session.user.id);
+                room.users.push(user);
+                this.roomRepository.persist(room);
                 socket.request.session.roomJoinedId = joinOptions.id;
+                delete user.password;
+                delete user.email;
+                this.io.to(`room n${joinOptions.id}`).emit('user join', user);
             });
         });
     }
