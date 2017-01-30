@@ -115,6 +115,19 @@ export class RoomSocketController {
         }
     }
 
+    @SocketEvent('send message')
+    async sendMessage(socket: CustomSocket, data: { message: string }) {
+        if (!socket.request.session.roomJoinedId) {
+            throw new Error('Not specified room id in session!');
+        }
+        const user = await this.userRepository.findOneById(socket.request.session.user.id);
+        this.io.to(`room n${socket.request.session.roomJoinedId}`).emit('new message', {
+            message: data.message,
+            sendedBy: `${user.firstName} ${user.lastName}`,
+            sended: new Date().toISOString()
+        });
+    }
+
     @SocketEvent('pause song')
     pauseSong(socket: CustomSocket) {
         if (!socket.request.session.roomJoinedId) {
