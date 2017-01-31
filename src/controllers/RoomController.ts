@@ -81,7 +81,7 @@ export class RoomController {
 
         if (!title) {
             response.statusCode = 400;
-            return { message: 'Invalid youtube id' };
+            return { message: 'Invalid YouTube id' };
         }
 
         const room = await this.roomRepository.findOneById(id);
@@ -133,6 +133,41 @@ export class RoomController {
         await this.roomRepository.persist(room);
         await this.videoRepository.remove(video);
         return room;
+    }
+
+    @Post('/rooms/:roomId/playlist')
+    async importPlaylist(@Res() response: Response, @Param('roomId') roomId: string, @BodyParam('playlistId') playlistId: string) {
+        if (!roomId || !playlistId) {
+            response.statusCode = 400;
+            return {
+                message: 'Invalid info'
+            };
+        }
+        const room = await this.roomRepository.findOneById(roomId);
+        if (!room) {
+            response.statusCode = 404;
+            return {
+                message: 'Resource not found'
+            };
+        }
+        const videosInfo = await this.youtubeService.getVideoInfoFromPlaylist(playlistId);
+        if (!videosInfo) {
+            response.statusCode = 400;
+            return {
+                message: 'Invalid YouTube playlist id'
+            };
+        }
+        const videos = videosInfo.map((videoInfo) => {
+            const video = new Video();
+            video.youtubeId = videoInfo.youtubeId;
+            video.title = videoInfo.title;
+            return video;
+        });
+        const storedVideos = await this.videoRepository.persist(videos);
+        room.videos = room.videos.concat(storedVideos);
+        const storedRoom = await this.roomRepository.persist(room);
+        storedVideos.forEach((video) => this.io.to(`room n${storedRoom.id}`).emit('video added', video));
+        return storedRoom;
     }
 
     @Get('/rooms/:id/users')
