@@ -9,7 +9,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceRoot}/index.js",
+            "program": "${workspaceRoot}/src/index.js",
             "cwd": "${workspaceRoot}",
             "outFiles": [],
             "sourceMaps": true

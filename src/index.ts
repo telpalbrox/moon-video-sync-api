@@ -10,9 +10,10 @@ import { createServer } from 'http';
 import * as parseDbUrl from 'parse-database-url';
 import { User } from './entities/User';
 import { useIoServer } from './sockets';
-import {Video} from './entities/Video';
-import {roomRepositoryFactory} from './services/RoomRepository';
-import {YoutubeService} from './services/YoutubeService';
+import { Video } from './entities/Video';
+import { roomRepositoryFactory } from './services/RoomRepository';
+import { YoutubeService } from './services/YoutubeService';
+import { SocketService } from './services/SocketService';
 
 const app = express();
 const server = createServer(app);
@@ -80,7 +81,11 @@ app.use(cors({
 app.use(sessionMiddleware);
 
 const io = socketIO(server);
+
 io.use((socket, next) => {
+    if (!socket.request.res) {
+        return next();
+    }
     sessionMiddleware(socket.request, socket.request.res, next);
 });
 
@@ -99,11 +104,12 @@ export async function startUpAPI() {
         { name: 'UserRepository', value: connection.getRepository(User) },
         { name: 'RoomRepository', value: roomRepositoryFactory(connection) },
         { name: 'VideoRepository', value: connection.getRepository(Video) },
-        { type: YoutubeService, value: new YoutubeService() }
+        { type: YoutubeService, value: new YoutubeService() },
+        { type: SocketService, value: new SocketService() }
     ]);
     useExpressServer(app, {
-        controllers: [ __dirname + '/controllers/*.js' ],
-        middlewares: [ __dirname + '/middlewares/*.js' ],
+        controllers: [__dirname + '/controllers/*.js'],
+        middlewares: [__dirname + '/middlewares/*.js'],
         useClassTransformer: true
     });
     require('./sockets/RoomSocketController');

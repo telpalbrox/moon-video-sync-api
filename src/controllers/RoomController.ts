@@ -1,13 +1,14 @@
 import {
-    JsonController, BodyParam, Res, Req, UseBefore, Post, Get, Param, Put, Delete
+    JsonController, BodyParam, Res, Req, UseBefore, Post, Get, Param, Put, Delete, Session
 } from 'routing-controllers';
 import { Inject } from 'typedi';
 import { Repository } from 'typeorm';
 import { Request, Response } from 'express';
 import { IsLoggedMiddleware } from '../middlewares/IsLoggedMiddleware';
 import { Room } from '../entities/Room';
-import {Video} from '../entities/Video';
-import {YoutubeService} from '../services/YoutubeService';
+import { Video } from '../entities/Video';
+import { YoutubeService } from '../services/YoutubeService';
+import { SocketService } from '../services/SocketService';
 
 @JsonController()
 export class RoomController {
@@ -23,9 +24,12 @@ export class RoomController {
     @Inject()
     youtubeService: YoutubeService;
 
+    @Inject()
+    socketService: SocketService;
+
     @Post('/rooms')
     @UseBefore(IsLoggedMiddleware)
-    async createRoom(@Req() request: Request, @Res() response: Response, @BodyParam('name') name: string) {
+    async createRoom( @Req() request: Request, @Res() response: Response, @BodyParam('name') name: string) {
         if (!name) {
             response.statusCode = 400;
             return { message: 'Please specify a name' };
@@ -45,7 +49,7 @@ export class RoomController {
 
     @Get('/rooms/:id')
     @UseBefore(IsLoggedMiddleware)
-    async getRoom(@Res() response: Response, @Param('id') id: string) {
+    async getRoom( @Res() response: Response, @Param('id') id: string) {
         const room = await this.roomRepository.findOneById(id);
         if (!room) {
             response.statusCode = 404;
@@ -56,7 +60,7 @@ export class RoomController {
 
     @Delete('/rooms/:id')
     @UseBefore(IsLoggedMiddleware)
-    async deleteRoom(@Res() response: Response, @Param('id') id: string) {
+    async deleteRoom( @Res() response: Response, @Param('id') id: string) {
         const room = await this.roomRepository.findOneById(id);
         if (!room) {
             response.statusCode = 404;
@@ -69,7 +73,7 @@ export class RoomController {
 
     @Post('/rooms/:id/videos')
     @UseBefore(IsLoggedMiddleware)
-    async addVideo(@Res() response: Response, @Param('id') id: string, @BodyParam('youtubeId') youtubeId: string) {
+    async addVideo( @Res() response: Response, @Param('id') id: string, @BodyParam('youtubeId') youtubeId: string) {
         if (!youtubeId) {
             response.statusCode = 400;
             return {
@@ -108,7 +112,7 @@ export class RoomController {
 
     @Delete('/rooms/:roomId/videos/:videoId')
     @UseBefore(IsLoggedMiddleware)
-    async deleteVideo(@Res() response: Response, @Param('roomId') roomId: string, @Param('videoId') videoId: string) {
+    async deleteVideo( @Res() response: Response, @Param('roomId') roomId: string, @Param('videoId') videoId: string) {
         if (!roomId || !videoId) {
             response.statusCode = 400;
             return {
@@ -136,7 +140,7 @@ export class RoomController {
     }
 
     @Post('/rooms/:roomId/playlist')
-    async importPlaylist(@Res() response: Response, @Param('roomId') roomId: string, @BodyParam('playlistId') playlistId: string) {
+    async importPlaylist( @Res() response: Response, @Param('roomId') roomId: string, @BodyParam('playlistId') playlistId: string) {
         if (!roomId || !playlistId) {
             response.statusCode = 400;
             return {
@@ -172,7 +176,7 @@ export class RoomController {
 
     @Get('/rooms/:id/users')
     @UseBefore(IsLoggedMiddleware)
-    async getRoomUsers(@Res() response: Response, @Param('id') id: string) {
+    async getRoomUsers( @Res() response: Response, @Param('id') id: string) {
         const room = await this.roomRepository.createQueryBuilder('room').where('room.id = :id', { id }).innerJoinAndSelect('room.users', 'users').getOne();
         if (!room) {
             response.statusCode = 404;
@@ -183,7 +187,7 @@ export class RoomController {
 
     @Put('/rooms/:id/users')
     @UseBefore(IsLoggedMiddleware)
-    async joinRoom(@Req() request: Request, @Res() response: Response, @Param('id') id: string) {
+    async joinRoom( @Req() request: Request, @Res() response: Response, @Param('id') id: string) {
         const room = await this.roomRepository.createQueryBuilder('room').where('room.id = :id', { id }).leftJoinAndSelect('room.users', 'users').getOne();
         if (!room) {
             response.statusCode = 404;
@@ -196,6 +200,25 @@ export class RoomController {
         }
         room.users.push(request.user);
         await this.roomRepository.persist(room);
+        return { message: 'ok' };
+    }
+
+    @Post('/socket/:id')
+    async socket( @Req() request: Request, @Res() response: Response, @Param('id') id: string, @Session() session: Express.Session) {
+        console.log('adsfasdf');
+        const socket = this.io.sockets.connected[id];
+        if (!socket) {
+            return;
+        }
+        this.socketService.socketSessions[id] = session;
+        Object.defineProperty(socket, 'teest', {
+            value: {
+                session: {
+                    user: session.user
+                }
+            }
+        });
+        (socket as any).lool = 'asdf';
         return { message: 'ok' };
     }
 }

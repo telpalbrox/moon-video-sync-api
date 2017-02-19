@@ -1,9 +1,10 @@
-import {Inject} from 'typedi';
+import { Inject } from 'typedi';
 import { SocketController, ServerEvent, SocketEvent } from './decorators';
-import {Repository} from 'typeorm';
-import {Room} from '../entities/Room';
-import {Video} from '../entities/Video';
-import {User} from '../entities/User';
+import { Repository } from 'typeorm';
+import { Room } from '../entities/Room';
+import { Video } from '../entities/Video';
+import { User } from '../entities/User';
+import { SocketService } from '../services/SocketService';
 
 interface JoinRoomParams {
     id?: number;
@@ -23,6 +24,9 @@ export class RoomSocketController {
     @Inject('io')
     io: SocketIO.Server;
 
+    @Inject()
+    socketService: SocketService;
+
     @ServerEvent('connect')
     connectedSocket(socket: CustomSocket) {
         console.log(`connected: ${socket.id}`);
@@ -31,6 +35,10 @@ export class RoomSocketController {
     @SocketEvent('disconnect')
     disconnectedSocket(socket: CustomSocket) {
         console.log(`disconnected: ${socket.id}`);
+
+        if (!socket.request.session) {
+            socket.request.session = this.socketService.socketSessions[socket.id];
+        }
 
         if (!socket.request.session.roomJoinedId) {
             return console.error('Not specified room id in session!');
@@ -60,6 +68,9 @@ export class RoomSocketController {
 
     @SocketEvent('join room')
     joinRoom(socket: CustomSocket, joinOptions: JoinRoomParams) {
+        if (!socket.request.session) {
+            socket.request.session = this.socketService.socketSessions[socket.id];
+        }
         if (!socket.request.session.user) {
             throw new Error('You should be logged before join a room');
         }
@@ -95,6 +106,9 @@ export class RoomSocketController {
 
     @SocketEvent('change video')
     async nextVideo(socket: CustomSocket, data: { id: number, emit: boolean }) {
+        if (!socket.request.session) {
+            socket.request.session = this.socketService.socketSessions[socket.id];
+        }
         if (!socket.request.session.roomJoinedId) {
             throw new Error('Not specified room id in session!');
         }
@@ -117,6 +131,10 @@ export class RoomSocketController {
 
     @SocketEvent('send message')
     async sendMessage(socket: CustomSocket, data: { message: string }) {
+        if (!socket.request.session) {
+            socket.request.session = this.socketService.socketSessions[socket.id];
+        }
+
         if (!socket.request.session.roomJoinedId) {
             throw new Error('Not specified room id in session!');
         }
@@ -130,6 +148,10 @@ export class RoomSocketController {
 
     @SocketEvent('pause song')
     pauseSong(socket: CustomSocket) {
+        if (!socket.request.session) {
+            socket.request.session = this.socketService.socketSessions[socket.id];
+        }
+
         if (!socket.request.session.roomJoinedId) {
             return;
         }
