@@ -72,7 +72,7 @@ export class RoomSocketController {
             socket.request.session = this.socketService.socketSessions[socket.id];
         }
         if (!socket.request.session.user) {
-            throw new Error('You should be logged before join a room');
+            return console.log('Not logged user tried to join a room via socket');
         }
         this.io.in(`room n${joinOptions.id}`).clients(async (err, clients) => {
             if (!joinOptions.id) {
