@@ -99,18 +99,18 @@ export async function startUpAPI() {
     const connection = await createConnection(typeORMConfig);
     console.log('Connected to the database');
     Container.provide([
-        { name: 'io', value: io },
-        { type: Connection, value: connection },
-        { name: 'UserRepository', value: connection.getRepository(User) },
-        { name: 'RoomRepository', value: roomRepositoryFactory(connection) },
-        { name: 'VideoRepository', value: connection.getRepository(Video) },
-        { type: YoutubeService, value: new YoutubeService() },
-        { type: SocketService, value: new SocketService() }
+        { id: 'io', value: io },
+        { id: Connection, value: connection },
+        { id: 'UserRepository', value: connection.getRepository(User) },
+        { id: 'RoomRepository', value: roomRepositoryFactory(connection) },
+        { id: 'VideoRepository', value: connection.getRepository(Video) },
+        { id: YoutubeService, value: new YoutubeService() },
+        { id: SocketService, value: new SocketService() }
     ]);
     useExpressServer(app, {
         controllers: [__dirname + '/controllers/*.js'],
         middlewares: [__dirname + '/middlewares/*.js'],
-        useClassTransformer: true
+        classTransformer: true
     });
     require('./sockets/RoomSocketController');
     useIoServer(io);

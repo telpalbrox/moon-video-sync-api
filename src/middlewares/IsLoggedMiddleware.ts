@@ -1,11 +1,10 @@
-import { Middleware } from 'routing-controllers';
 import { Repository } from 'typeorm';
 import { Inject } from 'typedi';
 import { Request, Response } from 'express';
+import { ExpressMiddlewareInterface } from 'routing-controllers/driver/express/ExpressMiddlewareInterface';
 import { User } from '../entities/User';
 
-@Middleware()
-export class IsLoggedMiddleware {
+export class IsLoggedMiddleware implements ExpressMiddlewareInterface {
     @Inject('UserRepository')
     userRepository: Repository<User>;
 
