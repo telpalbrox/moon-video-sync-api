@@ -141,8 +141,8 @@ export class RoomSocketController {
         const user = await this.userRepository.findOneById(socket.request.session.user.id);
         this.io.to(`room n${socket.request.session.roomJoinedId}`).emit('new message', {
             message: data.message,
-            sendedBy: `${user.firstName} ${user.lastName}`,
-            sended: new Date().toISOString()
+            sentBy: `${user.firstName} ${user.lastName}`,
+            date: new Date().toISOString()
         });
     }
 
