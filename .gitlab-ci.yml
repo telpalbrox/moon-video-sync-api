@@ -12,6 +12,6 @@ deploy:
       - apt-get install -yqq ruby ruby-dev --silent
       - rm -rf node_modules
       - gem install dpl
-      - dpl --provider=heroku --app=api-typescript-example --api-key=$HEROKU_API_KEY --skip_cleanup
+      - dpl --provider=heroku --app=moon-video-sync-api --api-key=$HEROKU_API_KEY --skip_cleanup
     only:
       - master

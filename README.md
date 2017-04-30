@@ -1,5 +1,7 @@
 # Moon Video Sync API
 
+[![build status](https://gitlab.com/albertoluna/moon-video-sync-api/badges/master/build.svg)](https://gitlab.com/albertoluna/moon-video-sync-api/commits/master)
+
 Small API for sync youtube videos built with Node and typescript
 
 ## Environment variables
