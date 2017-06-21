@@ -9,6 +9,7 @@ RUN npm install
 COPY . /usr/src/app
 
 RUN npm run build
+RUN npm test
 
 ARG MOON_VIDEO_SYNC_PORT=3000
 EXPOSE $MOON_VIDEO_SYNC_PORT

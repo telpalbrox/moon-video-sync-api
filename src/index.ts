@@ -46,7 +46,7 @@ if (process.env.NODE_ENV === 'production') {
     };
 } else {
     const SQLiteStore = require('connect-sqlite3')(session);
-    const databaseFileName = process.env.NODE_ENV === 'TEST' ? 'db.test.sqlite' : 'db.sqlite';
+    const databaseFileName = process.env.NODE_ENV === 'test' ? 'db.test.sqlite' : 'db.sqlite';
     sessionStore = new SQLiteStore({
         db: databaseFileName
     });
@@ -89,10 +89,10 @@ io.use((socket, next) => {
     sessionMiddleware(socket.request, socket.request.res, next);
 });
 
-useContainer(Container);
+const PORT = process.env.PORT || 3000;
 
-if (process.env.NODE_ENV !== 'TEST') {
-    startUpAPI().then(() => console.log(`Server listening on: ${process.env.PORT || 3000}`));
+if (process.env.NODE_ENV !== 'test') {
+    startUpAPI().then(() => console.log(`Server listening on: ${PORT}`));
 }
 
 export async function startUpAPI() {
@@ -107,10 +107,14 @@ export async function startUpAPI() {
         { id: YoutubeService, value: new YoutubeService() },
         { id: SocketService, value: new SocketService() }
     ]);
+
+    useContainer(Container);
+
     useExpressServer(app, {
         controllers: [__dirname + '/controllers/*.js'],
         middlewares: [__dirname + '/middlewares/*.js'],
-        classTransformer: true
+        classTransformer: true,
+        defaultErrorHandler: false
     });
     require('./sockets/RoomSocketController');
     useIoServer(io);
@@ -120,6 +124,6 @@ export async function startUpAPI() {
 
 function startExpressServer() {
     return new Promise((resolve) => {
-        server.listen(process.env.PORT || 3000, () => resolve());
+        server.listen(PORT, () => resolve());
     });
 }

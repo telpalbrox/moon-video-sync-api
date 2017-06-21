@@ -13,7 +13,7 @@ describe('AuthController integration tests', () => {
         supertest(app)
             .post('/login')
             .send({ email: 'notfound', passwor: 'notdefined' })
-            .expect(404)
+            .expect(403)
             .end(done);
     });
 });
