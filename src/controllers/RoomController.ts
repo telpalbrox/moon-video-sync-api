@@ -38,7 +38,7 @@ export class RoomController {
         const room = new Room();
         room.name = name;
         room.playing = false;
-        return await this.roomRepository.persist(room);
+        return await this.roomRepository.save(room);
     }
 
     @Get('/rooms')
@@ -100,12 +100,12 @@ export class RoomController {
         if (!room.videos.length) {
             video.startedPlayed = new Date().toISOString();
         }
-        const storedVideo = await this.videoRepository.persist(video);
+        const storedVideo = await this.videoRepository.save(video);
         room.videos.push(storedVideo);
         if (!room.currentVideoId) {
             room.currentVideoId = storedVideo.id;
         }
-        await this.roomRepository.persist(room);
+        await this.roomRepository.save(room);
         this.io.to(`room n${room.id}`).emit('video added', storedVideo);
         return storedVideo;
     }
@@ -134,7 +134,7 @@ export class RoomController {
             room.currentVideoId = null;
         }
         this.io.to(`room n${room.id}`).emit('video deleted', video);
-        await this.roomRepository.persist(room);
+        await this.roomRepository.save(room);
         await this.videoRepository.remove(video);
         return room;
     }
@@ -167,9 +167,9 @@ export class RoomController {
             video.title = videoInfo.title;
             return video;
         });
-        const storedVideos = await this.videoRepository.persist(videos);
+        const storedVideos = await this.videoRepository.save(videos);
         room.videos = room.videos.concat(storedVideos);
-        const storedRoom = await this.roomRepository.persist(room);
+        const storedRoom = await this.roomRepository.save(room);
         storedVideos.forEach((video) => this.io.to(`room n${storedRoom.id}`).emit('video added', video));
         return storedRoom;
     }
@@ -199,7 +199,7 @@ export class RoomController {
             return { message: 'You already joined this room' };
         }
         room.users.push(request.user);
-        await this.roomRepository.persist(room);
+        await this.roomRepository.save(room);
         return { message: 'ok' };
     }
 

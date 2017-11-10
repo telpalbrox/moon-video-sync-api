@@ -47,7 +47,7 @@ export class AuthService {
                 throw new Error(AuthService.USER_ALREADY_EXISTS_ERROR);
             }
             await user.hashPassword();
-            return await this.userRepository.persist(user);
+            return await this.userRepository.save(user);
         } catch (error) {
             throw error;
         }

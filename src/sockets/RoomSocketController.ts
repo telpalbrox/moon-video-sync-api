@@ -48,19 +48,19 @@ export class RoomSocketController {
             const room = await this.roomRepository.findOneById(socket.request.session.roomJoinedId);
             const userLeaving = await this.userRepository.findOneById(socket.request.session.user.id);
             room.users = room.users.filter((user) => user.id !== userLeaving.id);
-            await this.roomRepository.persist(room);
+            await this.roomRepository.save(room);
             delete userLeaving.password;
             delete userLeaving.email;
             this.io.to(`room n${socket.request.session.roomJoinedId}`).emit('user leave', userLeaving);
             if (!clients.length) {
                 room.playing = false;
-                await this.roomRepository.persist(room);
+                await this.roomRepository.save(room);
                 const video = await this.videoRepository.findOneById(room.currentVideoId);
                 if (!video) {
                     return;
                 }
                 video.startedPlayed = null;
-                await this.videoRepository.persist(video);
+                await this.videoRepository.save(video);
             }
             delete socket.request.session.roomJoinedId;
         });
@@ -81,11 +81,11 @@ export class RoomSocketController {
             if (!clients.length) {
                 const room = await this.roomRepository.findOneById(joinOptions.id);
                 room.playing = true;
-                await this.roomRepository.persist(room);
+                await this.roomRepository.save(room);
                 const video = await this.videoRepository.findOneById(room.currentVideoId);
                 if (video) {
                     video.startedPlayed = new Date().toISOString();
-                    await this.videoRepository.persist(video);
+                    await this.videoRepository.save(video);
                 }
             }
             socket.join(`room n${joinOptions.id}`, async (err) => {
@@ -95,7 +95,7 @@ export class RoomSocketController {
                 const room = await this.roomRepository.findOneById(joinOptions.id);
                 const user = await this.userRepository.findOneById(socket.request.session.user.id);
                 room.users.push(user);
-                this.roomRepository.persist(room);
+                this.roomRepository.save(room);
                 socket.request.session.roomJoinedId = joinOptions.id;
                 delete user.password;
                 delete user.email;
@@ -122,8 +122,8 @@ export class RoomSocketController {
         }
         room.currentVideoId = video.id;
         video.startedPlayed = new Date().toISOString();
-        await this.roomRepository.persist(room);
-        await this.videoRepository.persist(video);
+        await this.roomRepository.save(room);
+        await this.videoRepository.save(video);
         if (data.emit) {
             this.io.to(`room n${socket.request.session.roomJoinedId}`).emit('video changed', video);
         }

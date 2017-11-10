@@ -159,7 +159,7 @@ describe('AuthController tests', () => {
                 findOne() {
                     return null;
                 },
-                persist(user: User) {
+                save(user: User) {
                     expect(user).to.include.keys('firstName', 'lastName', 'email', 'password');
                     return registerUser;
                 }

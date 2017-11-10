@@ -14,12 +14,13 @@ import { Video } from './entities/Video';
 import { roomRepositoryFactory } from './services/RoomRepository';
 import { YoutubeService } from './services/YoutubeService';
 import { SocketService } from './services/SocketService';
+import { ConnectionOptions } from 'typeorm/connection/ConnectionOptions';
 
 const app = express();
 const server = createServer(app);
 
 let sessionStore;
-let typeORMConfig;
+let typeORMConfig: ConnectionOptions;
 
 if (process.env.NODE_ENV === 'production') {
     if (!process.env.DATABASE_URL || !process.env.REDIS_URL) {
@@ -31,15 +32,13 @@ if (process.env.NODE_ENV === 'production') {
         url: process.env.REDIS_URL
     });
     typeORMConfig = {
-        driver: {
-            type: dbConfig.driver,
-            host: dbConfig.host,
-            port: dbConfig.port,
-            username: dbConfig.user,
-            password: dbConfig.password,
-            database: dbConfig.database
-        },
-        autoSchemaSync: true,
+        type: dbConfig.driver,
+        host: dbConfig.host,
+        port: dbConfig.port,
+        username: dbConfig.user,
+        password: dbConfig.password,
+        database: dbConfig.database,
+        migrationsRun: true,
         entities: [
             __dirname + '/entities/*.js'
         ]
@@ -51,11 +50,9 @@ if (process.env.NODE_ENV === 'production') {
         db: databaseFileName
     });
     typeORMConfig = {
-        driver: {
-            type: 'sqlite',
-            storage: `${databaseFileName}.db`
-        },
-        autoSchemaSync: true,
+        type: 'sqlite',
+        database: `${databaseFileName}.db`,
+        migrationsRun: true,
         entities: [
             __dirname + '/entities/*.js'
         ]
@@ -92,7 +89,7 @@ io.use((socket, next) => {
 const PORT = process.env.PORT || 3000;
 
 if (process.env.NODE_ENV !== 'test') {
-    startUpAPI().then(() => console.log(`Server listening on: ${PORT}`));
+    startUpAPI().then(() => console.log(`Server listening on: ${PORT}`)).catch((err) => console.error(err));
 }
 
 export async function startUpAPI() {

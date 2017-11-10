@@ -16,6 +16,6 @@ export class UserRepository {
         const user = new User();
         user.firstName = firstName;
         user.lastName = lastName;
-        return await this.connection.entityManager.persist(user);
+        return await this.connection.manager.save(user);
     }
 }
