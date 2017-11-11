@@ -41,7 +41,9 @@ export class AuthController {
     @UseBefore(IsNotLoggedMiddleware)
     async register(@Body() user: User, @Session() session: Express.Session, @Res() response: Response) {
         try {
-            session.user = await this.authService.register(user);
+            const registeredUser = await this.authService.register(user);
+            session.user = registeredUser;
+            return registeredUser;
         } catch (error) {
             switch (error.message) {
                 case AuthService.INVALID_INFO_ERROR:
