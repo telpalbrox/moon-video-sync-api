@@ -38,6 +38,7 @@ if (process.env.NODE_ENV === 'production') {
         username: dbConfig.user,
         password: dbConfig.password,
         database: dbConfig.database,
+        synchronize: true,
         migrationsRun: true,
         entities: [
             __dirname + '/entities/*.js'
@@ -53,6 +54,7 @@ if (process.env.NODE_ENV === 'production') {
         type: 'sqlite',
         database: `${databaseFileName}.db`,
         migrationsRun: true,
+        synchronize: true,
         entities: [
             __dirname + '/entities/*.js'
         ]

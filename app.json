@@ -1,7 +1,0 @@
-{
-    "scripts": {
-        "dokku": {
-            "postdeploy": "./node_modules/.bin/typeorm schema:sync"
-        }
-    }
-}
