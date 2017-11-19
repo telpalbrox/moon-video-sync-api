@@ -5,3 +5,4 @@ node_modules/
 .idea/
 .dpl/
 npm-debug.log
+.vscode/

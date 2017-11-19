@@ -18,8 +18,8 @@ export class Room {
     videos: Video[] = [];
 
     @Column({ nullable: true })
-    currentVideoId: number;
+    currentVideoId?: number;
 
     @Column()
-    playing: boolean;
+    playing: boolean = false;
 }

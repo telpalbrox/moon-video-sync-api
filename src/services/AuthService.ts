@@ -6,7 +6,7 @@ import {User} from '../entities/User';
 export class AuthService {
     public static USER_NOT_FOUND_ERROR = 'USER_NOT_FOUND';
     public static INCORRECT_PASSWORD_ERROR = 'INCORRECT_PASSWORD';
-    public static INVALID_INFO_ERROR = 'INVALID_INFO';
+    public static INVALID_INFO_ERROR = 'USER_INVALID_INFO';
     public static USER_ALREADY_EXISTS_ERROR = 'USER_ALREADY_EXISTS';
 
     @Inject('UserRepository')
