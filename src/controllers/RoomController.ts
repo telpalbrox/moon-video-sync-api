@@ -14,17 +14,8 @@ const Boom = require('boom');
 
 @JsonController()
 export class RoomController {
-    @Inject('RoomRepository')
-    roomRepository: Repository<Room>;
-
-    @Inject('VideoRepository')
-    videoRepository: Repository<Video>;
-
     @Inject('io')
     io: SocketIO.Server;
-
-    @Inject()
-    youtubeService: YoutubeService;
 
     @Inject()
     socketService: SocketService;

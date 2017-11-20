@@ -5,6 +5,7 @@ import { Room } from '../entities/Room';
 import { Video } from '../entities/Video';
 import { User } from '../entities/User';
 import { SocketService } from '../services/SocketService';
+import { RoomService } from '../services/RoomService';
 
 interface JoinRoomParams {
     id?: number;
@@ -27,13 +28,16 @@ export class RoomSocketController {
     @Inject()
     socketService: SocketService;
 
+    @Inject()
+    roomService: RoomService;
+
     @ServerEvent('connect')
     connectedSocket(socket: CustomSocket) {
         console.log(`connected: ${socket.id}`);
     }
 
     @SocketEvent('disconnect')
-    disconnectedSocket(socket: CustomSocket) {
+    async disconnectedSocket(socket: CustomSocket) {
         console.log(`disconnected: ${socket.id}`);
 
         if (!socket.request.session) {
@@ -44,26 +48,18 @@ export class RoomSocketController {
             return console.error('Not specified room id in session!');
         }
 
-        this.io.in(`room n${socket.request.session.roomJoinedId}`).clients(async (err, clients) => {
-            const room = await this.roomRepository.findOneById(socket.request.session.roomJoinedId);
-            const userLeaving = await this.userRepository.findOneById(socket.request.session.user.id);
-            room.users = room.users.filter((user) => user.id !== userLeaving.id);
-            await this.roomRepository.save(room);
-            delete userLeaving.password;
-            delete userLeaving.email;
-            this.io.to(`room n${socket.request.session.roomJoinedId}`).emit('user leave', userLeaving);
-            if (!clients.length) {
-                room.playing = false;
-                await this.roomRepository.save(room);
-                const video = await this.videoRepository.findOneById(room.currentVideoId);
-                if (!video) {
-                    return;
-                }
-                video.startedPlayed = null;
-                await this.videoRepository.save(video);
-            }
+        try {
+            await this.roomService.leaveRoom(socket.request.session.roomJoinedId, socket.request.session.user.id);
+        } catch (error) {
+            console.error('Error disconecting socket');
+            console.error(error);
+        } finally {
+            const user = socket.request.session.user;
+            delete user.password;
+            delete user.email;
+            this.io.to(`room n${socket.request.session.roomJoinedId}`).emit('user leave', user);
             delete socket.request.session.roomJoinedId;
-        });
+        }
     }
 
     @SocketEvent('join room')
@@ -74,10 +70,11 @@ export class RoomSocketController {
         if (!socket.request.session.user) {
             return console.log('Not logged user tried to join a room via socket');
         }
+        if (!joinOptions.id) {
+            throw new Error('Not specified room id!');
+        }
+
         this.io.in(`room n${joinOptions.id}`).clients(async (err, clients) => {
-            if (!joinOptions.id) {
-                throw new Error('Not specified room id!');
-            }
             if (!clients.length) {
                 const room = await this.roomRepository.findOneById(joinOptions.id);
                 room.playing = true;
@@ -112,20 +109,14 @@ export class RoomSocketController {
         if (!socket.request.session.roomJoinedId) {
             throw new Error('Not specified room id in session!');
         }
-        const room = await this.roomRepository.findOneById(socket.request.session.roomJoinedId);
-        const video = await this.videoRepository.findOneById(data.id);
-        if (!video) {
-            return;
-        }
-        if (room.currentVideoId === video.id) {
-            return;
-        }
-        room.currentVideoId = video.id;
-        video.startedPlayed = new Date().toISOString();
-        await this.roomRepository.save(room);
-        await this.videoRepository.save(video);
-        if (data.emit) {
-            this.io.to(`room n${socket.request.session.roomJoinedId}`).emit('video changed', video);
+        try {
+            const video = await this.roomService.changeVideo(socket.request.session.roomJoinedId, data.id);
+            if (video && data.emit) {
+                this.io.to(`room n${socket.request.session.roomJoinedId}`).emit('video changed', video);
+            }
+        } catch (error) {
+            console.error('Error changing video');
+            console.error(error);
         }
     }
 

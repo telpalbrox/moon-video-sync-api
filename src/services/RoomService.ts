@@ -15,6 +15,7 @@ export class RoomService {
     public static VIDEO_NOT_FOUND_ERROR = 'VIDEO_NOT_FOUND';
     public static PLAYLIST_INVALID_INFO_ERROR = 'PLAYLIST_INVALID_INFO'
     public static USER_ALREADY_JOINED_ERROR = 'USER_ALREADY_JOINED';
+    public static USER_NOT_FOUND_ERROR = 'USER_NOT_FOUND';
 
     @Inject('UserRepository')
     userRepository: Repository<User>;
@@ -182,5 +183,47 @@ export class RoomService {
         }
         room.users.push(user);
         this.roomRepository.save(room);
+    }
+
+    async leaveRoom(roomId: string | number, userId: string | number): Promise<void> {
+        const room = await this.roomRepository.findOneById(roomId);
+        if (!room) {
+            throw new Error(RoomService.NOT_FOUND_ERROR);
+        }
+        const userLeaving = await this.userRepository.findOneById(userId);
+        if (!userLeaving) {
+            throw new Error(RoomService.USER_NOT_FOUND_ERROR);
+        }
+        room.users = room.users.filter((user) => user.id !== userId);
+        let storedRoom = await this.roomRepository.save(room);
+        if (room.users.length) {
+            return;
+        }
+        storedRoom.playing = false;
+        storedRoom = await this.roomRepository.save(storedRoom);
+        const video = await this.videoRepository.findOneById(room.currentVideoId);
+        if (!video) {
+            return;
+        }
+        video.startedPlayed = null;
+        await this.videoRepository.save(video);
+    }
+
+    async changeVideo(roomId: string | number, videoId: string | number): Promise<Video> {
+        const room = await this.roomRepository.findOneById(roomId);
+        if (!room) {
+            throw new Error(RoomService.NOT_FOUND_ERROR);
+        }
+        const video = await this.videoRepository.findOneById(videoId);
+        if (!video) {
+            throw new Error(RoomService.VIDEO_NOT_FOUND_ERROR);
+        }
+        if (room.currentVideoId === video.id) {
+            return;
+        }
+        room.currentVideoId = video.id;
+        video.startedPlayed = new Date().toISOString();
+        await this.roomRepository.save(room);
+        return this.videoRepository.save(video);
     }
 }
