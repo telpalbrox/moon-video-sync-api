@@ -8,6 +8,7 @@ import * as cors from 'cors';
 import * as socketIO from 'socket.io';
 import { createServer } from 'http';
 import * as parseDbUrl from 'parse-database-url';
+import * as Boom from 'boom';
 import { User } from './entities/User';
 import { useIoServer } from './sockets';
 import { Video } from './entities/Video';
@@ -115,6 +116,14 @@ export async function startUpAPI() {
         classTransformer: true,
         defaultErrorHandler: false
     });
+    app.use((req, res) => {
+        res.status(404).json(Boom.notFound().output.payload);
+    });
+    app.use((err: Error, req, res, next) => {
+        console.error('Error2');
+        console.error(err.stack)
+        res.status(500).json(Boom.internal().output.payload);
+    })
     require('./sockets/RoomSocketController');
     useIoServer(io);
     await startExpressServer();
