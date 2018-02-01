@@ -117,7 +117,7 @@ export async function startUpAPI() {
         defaultErrorHandler: false
     });
     app.use((req, res) => {
-        if (res.finished) {
+        if (res.finished || res.headersSent) {
             return;
         }
         res.status(404).json(Boom.notFound().output.payload);

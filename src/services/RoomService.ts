@@ -150,7 +150,7 @@ export class RoomService {
             return video;
         });
         const storedVideos = await this.videoRepository.save(videos);
-        room.videos = room.videos.concat(storedVideos);
+        room.videos = Array.from(new Set([...room.videos, ...storedVideos]));
         const storedRoom = await this.roomRepository.save(room);
         storedVideos.forEach((video) => this.io.to(`room n${storedRoom.id}`).emit('video added', video));
         return storedRoom;

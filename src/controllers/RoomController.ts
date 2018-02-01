@@ -25,9 +25,9 @@ export class RoomController {
 
     @Post('/rooms')
     @UseBefore(IsLoggedMiddleware)
-    createRoom(@Req() request: Request, @Res() response: Response, @BodyParam('name') name: string) {
+    async createRoom(@Req() request: Request, @Res() response: Response, @BodyParam('name') name: string) {
         try {
-            return this.roomService.createRoom(name);
+            return await this.roomService.createRoom(name);
         } catch (error) {
             switch (error.message) {
                 case RoomService.INVALID_INFO_ERROR:
@@ -50,9 +50,9 @@ export class RoomController {
 
     @Get('/rooms/:id')
     @UseBefore(IsLoggedMiddleware)
-    getRoom( @Res() response: Response, @Param('id') id: string) {
+    async getRoom( @Res() response: Response, @Param('id') id: string) {
         try {
-            return this.roomService.getRoom(id);
+            return await this.roomService.getRoom(id);
         } catch (error) {
             switch (error.message) {
                 case RoomService.NOT_FOUND_ERROR:
@@ -66,9 +66,9 @@ export class RoomController {
 
     @Delete('/rooms/:id')
     @UseBefore(IsLoggedMiddleware)
-    deleteRoom( @Res() response: Response, @Param('id') id: string) {
+    async deleteRoom( @Res() response: Response, @Param('id') id: string) {
         try {
-            this.roomService.removeRoom(id);
+            await this.roomService.removeRoom(id);
             return { message: 'ok' };
         } catch (error) {
             switch (error.message) {
@@ -83,9 +83,9 @@ export class RoomController {
 
     @Post('/rooms/:id/videos')
     @UseBefore(IsLoggedMiddleware)
-    addVideo( @Res() response: Response, @Param('id') id: string, @BodyParam('youtubeId') youtubeId: string) {
+    async addVideo( @Res() response: Response, @Param('id') id: string, @BodyParam('youtubeId') youtubeId: string) {
         try {
-            return this.roomService.addVideo(id, youtubeId);
+            return await this.roomService.addVideo(id, youtubeId);
         } catch (error) {
             switch (error.message) {
                 case RoomService.INVALID_YOUTUBE_ID_ERROR:
@@ -105,9 +105,9 @@ export class RoomController {
 
     @Delete('/rooms/:roomId/videos/:videoId')
     @UseBefore(IsLoggedMiddleware)
-    removeVideo( @Res() response: Response, @Param('roomId') roomId: string, @Param('videoId') videoId: string) {
+    async removeVideo( @Res() response: Response, @Param('roomId') roomId: string, @Param('videoId') videoId: string) {
         try {
-            return this.roomService.removeVideo(roomId, videoId);
+            return await this.roomService.removeVideo(roomId, videoId);
         } catch (error) {
             switch (error.message) {
                 case RoomService.NOT_FOUND_ERROR:
@@ -123,7 +123,7 @@ export class RoomController {
     @Post('/rooms/:roomId/playlist')
     async importPlaylist( @Res() response: Response, @Param('roomId') roomId: string, @BodyParam('playlistId') playlistId: string) {
         try {
-            return this.roomService.importPlaylist(roomId, playlistId);
+            return await this.roomService.importPlaylist(roomId, playlistId);
         } catch (error) {
             switch (error.message) {
                 case RoomService.PLAYLIST_INVALID_INFO_ERROR:
@@ -142,7 +142,7 @@ export class RoomController {
     @UseBefore(IsLoggedMiddleware)
     async getRoomUsers( @Res() response: Response, @Param('id') id: string) {
         try {
-            return this.roomService.getRoomUsers(id);
+            return await this.roomService.getRoomUsers(id);
         } catch (error) {
             switch (error.message) {
                 case RoomService.NOT_FOUND_ERROR:
@@ -158,7 +158,7 @@ export class RoomController {
     @UseBefore(IsLoggedMiddleware)
     async joinRoom( @Req() request: Request, @Res() response: Response, @Param('id') id: string) {
         try {
-            this.roomService.joinRoom(id, request.user);
+            await this.roomService.joinRoom(id, request.user);
             return { message: 'ok' };
         } catch (error) {
             switch (error.message) {
@@ -176,7 +176,6 @@ export class RoomController {
 
     @Post('/socket/:id')
     async socket( @Req() request: Request, @Res() response: Response, @Param('id') id: string, @Session() session: Express.Session) {
-        console.log('adsfasdf');
         const socket = this.io.sockets.connected[id];
         if (!socket) {
             return;

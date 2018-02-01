@@ -22,15 +22,13 @@ export class AuthController {
         try {
             const loggedUser = await this.authService.login(user);
             session.user = loggedUser;
-            return loggedUser
+            return loggedUser;
         } catch (error) {
             switch (error.message) {
                 case AuthService.INCORRECT_PASSWORD_ERROR:
+                case AuthService.USER_NOT_FOUND_ERROR:
                     response.statusCode = 403;
                     return Boom.wrap(error, 403).output.payload;
-                case AuthService.USER_NOT_FOUND_ERROR:
-                    response.statusCode = 404;
-                    return Boom.wrap(error, 404).output.payload;
                 default:
                     throw error;
             }
