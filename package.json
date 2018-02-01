@@ -9,7 +9,7 @@
   "scripts": {
     "test": "npm run test:unit && npm run test:integration",
     "start": "node ./src/index.js",
-    "start:dev": "concurrently --kill-others \"tsc --watch\" \"nodemon --debug ./src/index.js\"",
+    "start:dev": "concurrently --kill-others \"tsc --watch\" \"nodemon --inspect ./src/index.js\"",
     "build": "tsc",
     "watch": "tsc --watch",
     "test:unit": "tsc && NODE_ENV=test mocha --recursive --require reflect-metadata --require source-map-support/register test/unit",

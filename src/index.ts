@@ -117,10 +117,12 @@ export async function startUpAPI() {
         defaultErrorHandler: false
     });
     app.use((req, res) => {
+        if (res.finished) {
+            return;
+        }
         res.status(404).json(Boom.notFound().output.payload);
     });
     app.use((err: Error, req, res, next) => {
-        console.error('Error2');
         console.error(err.stack)
         res.status(500).json(Boom.internal().output.payload);
     })
