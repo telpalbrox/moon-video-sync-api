@@ -129,7 +129,10 @@ export async function startUpAPI() {
     require('./sockets/RoomSocketController');
     useIoServer(io);
     await startExpressServer();
-    return app;
+    return {
+        app,
+        server
+    };
 }
 
 function startExpressServer() {
